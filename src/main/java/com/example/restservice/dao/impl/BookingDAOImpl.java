@@ -5,6 +5,7 @@ import com.example.restservice.dao.BookingDAO;
 import com.example.restservice.entity.Booking;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -77,7 +78,28 @@ public class BookingDAOImpl implements BookingDAO {
     }
 
     @Override
-    public boolean existsByRoomAndDate(int roomNumber, java.time.LocalDate reservationDate) {
+    public boolean existsByRoomAndDate(int roomNumber, LocalDate reservationDate) {
+        String sql = "SELECT COUNT(id) FROM bookings WHERE room_number = ? AND reservation_date = ?";
+
+        Connection conn = null;
+        try {
+            conn = dbConnection.getDBConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+
+            ps.setInt(1, roomNumber);
+            ps.setDate(2, Date.valueOf(reservationDate));
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to check booking existence", e);
+        } finally {
+            dbConnection.close(conn);
+        }
+
         return false;
     }
 
