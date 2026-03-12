@@ -51,6 +51,7 @@ public class BookingDAOImpl implements BookingDAO {
         throw new RuntimeException("Failed to save booking - no result returned");
     }
 
+    @Override
     public List<Booking> findAll() {
         List<Booking> bookings = new ArrayList<>();
         String sql = """
