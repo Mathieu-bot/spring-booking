@@ -1,5 +1,6 @@
 package com.example.restservice.controller;
 
+import com.example.restservice.dao.BookingDAO;
 import com.example.restservice.entity.Booking;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,17 +10,20 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
 public class BookingController {
 
-    private final List<Booking> bookings = new ArrayList<>();
+    private final BookingDAO bookingDAO;
+
+    public BookingController(BookingDAO bookingDAO) {
+        this.bookingDAO = bookingDAO;
+    }
 
     @GetMapping("/booking")
     public List<Booking> getBookings() {
-        return bookings;
+        return bookingDAO.findAll();
     }
 
     @PostMapping("/booking")
@@ -27,32 +31,19 @@ public class BookingController {
         int roomNumber = request.getRoomNumber();
         LocalDate reservationDate = request.getReservationDate();
 
-        if (roomNumber < 1 | roomNumber > 9) {
+        if (roomNumber < 1 || roomNumber > 9) {
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
                     .body("Error: Invalid room number");
         }
 
-        boolean isRoomBooked = bookings.stream()
-                .anyMatch(booking -> booking.getRoomNumber() == roomNumber &&
-                        booking.getReservationDate().equals(reservationDate));
-
-        if (isRoomBooked) {
+        if (bookingDAO.existsByRoomAndDate(roomNumber, reservationDate)) {
             return ResponseEntity
                     .status(HttpStatus.CONFLICT)
                     .body("Error: Room " + roomNumber + " is already booked for date " + reservationDate);
         }
 
-        Booking newBooking = new Booking(
-                request.getCustomerName(),
-                request.getPhoneNumber(),
-                request.getEmail(),
-                roomNumber,
-                request.getRoomDescription(),
-                reservationDate
-        );
-
-        bookings.add(newBooking);
-        return ResponseEntity.ok(bookings);
+        Booking newBooking = bookingDAO.save(request);
+        return ResponseEntity.ok(bookingDAO.findAll());
     }
 }
