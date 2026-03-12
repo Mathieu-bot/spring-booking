@@ -27,6 +27,12 @@ public class BookingController {
         int roomNumber = request.getRoomNumber();
         LocalDate reservationDate = request.getReservationDate();
 
+        if (roomNumber < 1 | roomNumber > 9) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body("Error: Invalid room number");
+        }
+
         boolean isRoomBooked = bookings.stream()
                 .anyMatch(booking -> booking.getRoomNumber() == roomNumber &&
                         booking.getReservationDate().equals(reservationDate));
