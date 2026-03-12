@@ -5,7 +5,6 @@ import com.example.restservice.dao.BookingDAO;
 import com.example.restservice.entity.Booking;
 
 import java.sql.*;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,13 +50,34 @@ public class BookingDAOImpl implements BookingDAO {
         throw new RuntimeException("Failed to save booking - no result returned");
     }
 
-    @Override
     public List<Booking> findAll() {
-        return List.of();
+        List<Booking> bookings = new ArrayList<>();
+        String sql = """
+                     SELECT (id, customer_name, phone_number, email, room_number, room_description, reservation_date)
+                     FROM bookings ORDER BY created_at DESC;
+                     """;
+
+        Connection conn = null;
+        try {
+            conn = dbConnection.getDBConnection();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+
+            while (rs.next()) {
+                bookings.add(mapRowToBooking(rs));
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to retrieve bookings", e);
+        } finally {
+            dbConnection.close(conn);
+        }
+
+        return bookings;
     }
 
     @Override
-    public boolean existsByRoomAndDate(int roomNumber, LocalDate reservationDate) {
+    public boolean existsByRoomAndDate(int roomNumber, java.time.LocalDate reservationDate) {
         return false;
     }
 
