@@ -24,14 +24,26 @@ public class BookingController {
 
     @PostMapping("/booking")
     public ResponseEntity<?> createBooking(@RequestBody Booking request) {
+        int roomNumber = request.getRoomNumber();
+        LocalDate reservationDate = request.getReservationDate();
+
+        boolean isRoomBooked = bookings.stream()
+                .anyMatch(booking -> booking.getRoomNumber() == roomNumber &&
+                        booking.getReservationDate().equals(reservationDate));
+
+        if (isRoomBooked) {
+            return ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body("Error: Room " + roomNumber + " is already booked for date " + reservationDate);
+        }
 
         Booking newBooking = new Booking(
                 request.getCustomerName(),
                 request.getPhoneNumber(),
                 request.getEmail(),
-                request.getRoomNumber(),
+                roomNumber,
                 request.getRoomDescription(),
-                request.getReservationDate()
+                reservationDate
         );
 
         bookings.add(newBooking);
