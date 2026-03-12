@@ -22,4 +22,19 @@ public class BookingController {
         return bookings;
     }
 
+    @PostMapping("/booking")
+    public ResponseEntity<?> createBooking(@RequestBody Booking request) {
+
+        Booking newBooking = new Booking(
+                request.getCustomerName(),
+                request.getPhoneNumber(),
+                request.getEmail(),
+                request.getRoomNumber(),
+                request.getRoomDescription(),
+                request.getReservationDate()
+        );
+
+        bookings.add(newBooking);
+        return ResponseEntity.ok(bookings);
+    }
 }
