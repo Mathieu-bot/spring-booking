@@ -106,4 +106,21 @@ class BookingControllerTest {
         verify(bookingDAO, never()).save(any(Booking.class));
     }
 
+    @Test
+    void testCreateBooking_WithAvailableRoom_ShouldCallSaveAndReturnBookings() {
+        Booking newBooking = new Booking("Nouveau Client", "0612345678", "nouveau@example.com",
+                7, "Chambre 7", LocalDate.of(2025, 9, 20));
+
+        when(bookingDAO.existsByRoomAndDate(7, LocalDate.of(2025, 9, 20))).thenReturn(false);
+        when(bookingDAO.save(newBooking)).thenReturn(newBooking);
+        when(bookingDAO.findAll()).thenReturn(List.of(newBooking));
+
+        ResponseEntity<?> response = bookingController.createBooking(newBooking);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        verify(bookingDAO, times(1)).existsByRoomAndDate(7, LocalDate.of(2025, 9, 20));
+        verify(bookingDAO, times(1)).save(newBooking);
+        verify(bookingDAO, times(1)).findAll();
+    }
 }
