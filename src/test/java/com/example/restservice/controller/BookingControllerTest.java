@@ -61,4 +61,18 @@ class BookingControllerTest {
         assertNotNull(response.getBody());
     }
 
+    @Test
+    void testCreateBooking_WithInvalidRoomNumber0_ShouldReturn400() {
+        Booking invalidBooking = new Booking("Client Test", "0123456789", "test@example.com",
+                0, "Chambre 0", LocalDate.of(2025, 9, 10));
+
+        ResponseEntity<?> response = bookingController.createBooking(invalidBooking);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("Error: Invalid room number", response.getBody());
+
+        verify(bookingDAO, never()).existsByRoomAndDate(anyInt(), any());
+        verify(bookingDAO, never()).save(any(Booking.class));
+    }
+
 }
