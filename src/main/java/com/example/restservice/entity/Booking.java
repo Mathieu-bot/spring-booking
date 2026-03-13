@@ -4,12 +4,15 @@ import java.time.LocalDate;
 import java.util.Objects;
 
 public class Booking {
-    private final String customerName;
-    private final String phoneNumber;
-    private final String email;
-    private final int roomNumber;
-    private final String roomDescription;
-    private final LocalDate reservationDate;
+    private String customerName;
+    private String phoneNumber;
+    private String email;
+    private int roomNumber;
+    private String roomDescription;
+    private LocalDate reservationDate;
+
+    public Booking() {
+    }
 
     public Booking(String customerName, String phoneNumber, String email, int roomNumber, String roomDescription, LocalDate reservationDate) {
         this.customerName = customerName;
