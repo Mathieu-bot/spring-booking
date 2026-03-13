@@ -45,4 +45,20 @@ class BookingControllerTest {
 
         verify(bookingDAO, times(1)).findAll();
     }
+
+    @Test
+    void testCreateBooking_WithValidRoom_ShouldReturn200() {
+        Booking newBooking = new Booking("Client Test", "0123456789", "test@example.com",
+                5, "Chambre 5", LocalDate.of(2025, 9, 10));
+
+        when(bookingDAO.existsByRoomAndDate(5, LocalDate.of(2025, 9, 10))).thenReturn(false);
+        when(bookingDAO.save(any(Booking.class))).thenReturn(newBooking);
+        when(bookingDAO.findAll()).thenReturn(List.of(newBooking));
+
+        ResponseEntity<?> response = bookingController.createBooking(newBooking);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+    }
+
 }
