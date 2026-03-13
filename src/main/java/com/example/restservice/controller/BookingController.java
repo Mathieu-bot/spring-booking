@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -27,23 +28,32 @@ public class BookingController {
     }
 
     @PostMapping("/booking")
-    public ResponseEntity<?> createBooking(@RequestBody Booking request) {
-        int roomNumber = request.getRoomNumber();
-        LocalDate reservationDate = request.getReservationDate();
+    public ResponseEntity<?> createBooking(@RequestBody List<Booking> requests) {
+        List<String> errors = new ArrayList<>();
 
-        if (roomNumber < 1 || roomNumber > 9) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body("Error: Invalid room number");
+        for (Booking request : requests) {
+            int roomNumber = request.getRoomNumber();
+            LocalDate reservationDate = request.getReservationDate();
+
+            if (roomNumber < 1 || roomNumber > 9) {
+                errors.add("Error: Invalid room number " + roomNumber);
+                continue;
+            }
+
+            if (bookingDAO.existsByRoomAndDate(roomNumber, reservationDate)) {
+                errors.add("Error: Room " + roomNumber + " is already booked for date " + reservationDate);
+                continue;
+            }
+
+            bookingDAO.save(request);
         }
 
-        if (bookingDAO.existsByRoomAndDate(roomNumber, reservationDate)) {
+        if (!errors.isEmpty()) {
             return ResponseEntity
                     .status(HttpStatus.CONFLICT)
-                    .body("Error: Room " + roomNumber + " is already booked for date " + reservationDate);
+                    .body(errors);
         }
 
-        Booking newBooking = bookingDAO.save(request);
         return ResponseEntity.ok(bookingDAO.findAll());
     }
 }
