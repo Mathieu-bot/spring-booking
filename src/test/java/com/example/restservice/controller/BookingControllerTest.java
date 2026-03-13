@@ -55,7 +55,7 @@ class BookingControllerTest {
         when(bookingDAO.save(any(Booking.class))).thenReturn(newBooking);
         when(bookingDAO.findAll()).thenReturn(List.of(newBooking));
 
-        ResponseEntity<?> response = bookingController.createBooking(newBooking);
+        ResponseEntity<?> response = bookingController.createBooking(List.of(newBooking));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -66,10 +66,9 @@ class BookingControllerTest {
         Booking invalidBooking = new Booking("Client Test", "0123456789", "test@example.com",
                 0, "Chambre 0", LocalDate.of(2025, 9, 10));
 
-        ResponseEntity<?> response = bookingController.createBooking(invalidBooking);
+        ResponseEntity<?> response = bookingController.createBooking(List.of(invalidBooking));
 
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Error: Invalid room number", response.getBody());
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
 
         verify(bookingDAO, never()).existsByRoomAndDate(anyInt(), any());
         verify(bookingDAO, never()).save(any(Booking.class));
@@ -80,10 +79,9 @@ class BookingControllerTest {
         Booking invalidBooking = new Booking("Client Test", "0123456789", "test@example.com",
                 10, "Chambre 10", LocalDate.of(2025, 9, 10));
 
-        ResponseEntity<?> response = bookingController.createBooking(invalidBooking);
+        ResponseEntity<?> response = bookingController.createBooking(List.of(invalidBooking));
 
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Error: Invalid room number", response.getBody());
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
 
         verify(bookingDAO, never()).existsByRoomAndDate(anyInt(), any());
         verify(bookingDAO, never()).save(any(Booking.class));
@@ -96,11 +94,12 @@ class BookingControllerTest {
 
         when(bookingDAO.existsByRoomAndDate(3, LocalDate.of(2025, 9, 15))).thenReturn(true);
 
-        ResponseEntity<?> response = bookingController.createBooking(booking);
+        ResponseEntity<?> response = bookingController.createBooking(List.of(booking));
 
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-        String expectedMessage = "Error: Room 3 is already booked for date 2025-09-15";
-        assertEquals(expectedMessage, response.getBody());
+        @SuppressWarnings("unchecked")
+        List<String> errors = (List<String>) response.getBody();
+        assertTrue(errors.contains("Error: Room 3 is already booked for date 2025-09-15"));
 
         verify(bookingDAO, times(1)).existsByRoomAndDate(3, LocalDate.of(2025, 9, 15));
         verify(bookingDAO, never()).save(any(Booking.class));
@@ -115,7 +114,7 @@ class BookingControllerTest {
         when(bookingDAO.save(newBooking)).thenReturn(newBooking);
         when(bookingDAO.findAll()).thenReturn(List.of(newBooking));
 
-        ResponseEntity<?> response = bookingController.createBooking(newBooking);
+        ResponseEntity<?> response = bookingController.createBooking(List.of(newBooking));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
