@@ -55,8 +55,8 @@ public class BookingDAOImpl implements BookingDAO {
     public List<Booking> findAll() {
         List<Booking> bookings = new ArrayList<>();
         String sql = """
-                     SELECT (id, customer_name, phone_number, email, room_number, room_description, reservation_date)
-                     FROM bookings ORDER BY created_at DESC;
+                     SELECT id, customer_name, phone_number, email, room_number, room_description, reservation_date
+                     FROM bookings ORDER BY created_at DESC
                      """;
 
         Connection conn = null;
