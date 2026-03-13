@@ -89,4 +89,21 @@ class BookingControllerTest {
         verify(bookingDAO, never()).save(any(Booking.class));
     }
 
+    @Test
+    void testCreateBooking_WithAlreadyBookedRoom_ShouldReturn409() {
+        Booking booking = new Booking("Client Test", "0123456789", "test@example.com",
+                3, "Chambre 3", LocalDate.of(2025, 9, 15));
+
+        when(bookingDAO.existsByRoomAndDate(3, LocalDate.of(2025, 9, 15))).thenReturn(true);
+
+        ResponseEntity<?> response = bookingController.createBooking(booking);
+
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        String expectedMessage = "Error: Room 3 is already booked for date 2025-09-15";
+        assertEquals(expectedMessage, response.getBody());
+
+        verify(bookingDAO, times(1)).existsByRoomAndDate(3, LocalDate.of(2025, 9, 15));
+        verify(bookingDAO, never()).save(any(Booking.class));
+    }
+
 }
