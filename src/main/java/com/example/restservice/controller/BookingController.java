@@ -23,36 +23,52 @@ public class BookingController {
     }
 
     @PostMapping("/booking")
-    public ResponseEntity<?> createBooking(@RequestBody Booking request) {
-        int roomNumber = request.getRoomNumber();
-        LocalDate reservationDate = request.getReservationDate();
+    public ResponseEntity<?> createBookings(@RequestBody List<Booking> requests) {
+        List<Booking> createdBookings = new ArrayList<>();
+        List<String> errors = new ArrayList<>();
 
-        if (roomNumber < 1 | roomNumber > 9) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body("Error: Invalid room number");
+        for (Booking request : requests) {
+            int roomNumber = request.getRoomNumber();
+            LocalDate reservationDate = request.getReservationDate();
+
+            if (roomNumber < 1 | roomNumber > 9) {
+                errors.add("Error: Invalid room number for " + request.getCustomerName());
+                continue;
+            }
+
+            boolean isRoomBooked = bookings.stream()
+                    .anyMatch(booking -> booking.getRoomNumber() == roomNumber &&
+                            booking.getReservationDate().equals(reservationDate));
+
+            if (isRoomBooked) {
+                errors.add("Error: Room " + roomNumber + " is already booked for date " + reservationDate);
+                continue;
+            }
+
+            Booking newBooking = new Booking(
+                    request.getCustomerName(),
+                    request.getPhoneNumber(),
+                    request.getEmail(),
+                    roomNumber,
+                    request.getRoomDescription(),
+                    reservationDate
+            );
+
+            bookings.add(newBooking);
+            createdBookings.add(newBooking);
         }
 
-        boolean isRoomBooked = bookings.stream()
-                .anyMatch(booking -> booking.getRoomNumber() == roomNumber &&
-                        booking.getReservationDate().equals(reservationDate));
-
-        if (isRoomBooked) {
-            return ResponseEntity
-                    .status(HttpStatus.CONFLICT)
-                    .body("Error: Room " + roomNumber + " is already booked for date " + reservationDate);
+        if (!errors.isEmpty() && createdBookings.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
         }
 
-        Booking newBooking = new Booking(
-                request.getCustomerName(),
-                request.getPhoneNumber(),
-                request.getEmail(),
-                roomNumber,
-                request.getRoomDescription(),
-                reservationDate
-        );
+        if (!errors.isEmpty()) {
+            return ResponseEntity.ok(java.util.Map.of(
+                    "created", createdBookings,
+                    "errors", errors
+            ));
+        }
 
-        bookings.add(newBooking);
-        return ResponseEntity.ok(bookings);
+        return ResponseEntity.ok(createdBookings);
     }
 }
